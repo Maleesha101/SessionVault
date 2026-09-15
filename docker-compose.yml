@@ -1,0 +1,112 @@
+services:
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: sessionvault-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    networks:
+      - sessionvault
+
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sessionvault-app
+    env_file:
+      - ./backend/.env
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_KEY: ${APP_KEY}
+      APP_URL: ${APP_URL:-http://localhost:8080}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-sessionvault}
+      DB_USERNAME: ${DB_USERNAME:-sessionvault}
+      DB_PASSWORD: ${DB_PASSWORD:-sessionvault}
+      LAB_MODE: ${LAB_MODE:-vulnerable}
+      VULN_PREDICTABLE_SESSION: ${VULN_PREDICTABLE_SESSION:-true}
+      VULN_SESSION_FIXATION: ${VULN_SESSION_FIXATION:-true}
+      VULN_NO_SESSION_ROTATION: ${VULN_NO_SESSION_ROTATION:-true}
+      VULN_MISSING_HTTPONLY: ${VULN_MISSING_HTTPONLY:-true}
+      VULN_MISSING_SECURE: ${VULN_MISSING_SECURE:-true}
+      VULN_WEAK_SAMESITE: ${VULN_WEAK_SAMESITE:-true}
+      VULN_LONG_SESSION: ${VULN_LONG_SESSION:-true}
+      VULN_LOGOUT_NOT_INVALIDATE: ${VULN_LOGOUT_NOT_INVALIDATE:-true}
+      VULN_SESSION_IN_URL: ${VULN_SESSION_IN_URL:-true}
+      VULN_CONCURRENT_SESSIONS: ${VULN_CONCURRENT_SESSIONS:-true}
+      VULN_PASSWORD_CHANGE_INVALIDATION: ${VULN_PASSWORD_CHANGE_INVALIDATION:-true}
+      VULN_ACCOUNT_DISABLE_INVALIDATION: ${VULN_ACCOUNT_DISABLE_INVALIDATION:-true}
+      LAB_SESSION_LIFETIME: ${LAB_SESSION_LIFETIME:-86400}
+    volumes:
+      - ./backend:/var/www/html:cached
+    depends_on:
+      - postgres
+    networks:
+      - sessionvault
+    command: php artisan serve --host=0.0.0.0 --port=8000
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: sessionvault-postgres
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-sessionvault}
+      POSTGRES_USER: ${DB_USERNAME:-sessionvault}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-sessionvault}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - sessionvault
+
+  artisan:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend/.env
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_KEY: ${APP_KEY}
+      APP_URL: ${APP_URL:-http://localhost:8080}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-sessionvault}
+      DB_USERNAME: ${DB_USERNAME:-sessionvault}
+      DB_PASSWORD: ${DB_PASSWORD:-sessionvault}
+      LAB_MODE: ${LAB_MODE:-vulnerable}
+      VULN_PREDICTABLE_SESSION: ${VULN_PREDICTABLE_SESSION:-true}
+      VULN_SESSION_FIXATION: ${VULN_SESSION_FIXATION:-true}
+      VULN_NO_SESSION_ROTATION: ${VULN_NO_SESSION_ROTATION:-true}
+      VULN_MISSING_HTTPONLY: ${VULN_MISSING_HTTPONLY:-true}
+      VULN_MISSING_SECURE: ${VULN_MISSING_SECURE:-true}
+      VULN_WEAK_SAMESITE: ${VULN_WEAK_SAMESITE:-true}
+      VULN_LONG_SESSION: ${VULN_LONG_SESSION:-true}
+      VULN_LOGOUT_NOT_INVALIDATE: ${VULN_LOGOUT_NOT_INVALIDATE:-true}
+      VULN_SESSION_IN_URL: ${VULN_SESSION_IN_URL:-true}
+      VULN_CONCURRENT_SESSIONS: ${VULN_CONCURRENT_SESSIONS:-true}
+      VULN_PASSWORD_CHANGE_INVALIDATION: ${VULN_PASSWORD_CHANGE_INVALIDATION:-true}
+      VULN_ACCOUNT_DISABLE_INVALIDATION: ${VULN_ACCOUNT_DISABLE_INVALIDATION:-true}
+      LAB_SESSION_LIFETIME: ${LAB_SESSION_LIFETIME:-86400}
+    volumes:
+      - ./backend:/var/www/html:cached
+    depends_on:
+      - postgres
+    networks:
+      - sessionvault
+    entrypoint: ["php", "artisan"]
+
+volumes:
+  postgres_data:
+
+networks:
+  sessionvault:
+    driver: bridge
