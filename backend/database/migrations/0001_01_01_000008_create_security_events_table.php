@@ -12,7 +12,8 @@ return new class extends Migration
             $table->id();
             $table->string('event_type');
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
-            $table->foreignId('session_id')->nullable()->constrained()->onDelete('set null');
+            $table->string('session_id')->nullable();
+            $table->foreign('session_id')->references('id')->on('sessions')->onDelete('set null');
             $table->string('ip_address')->nullable();
             $table->text('user_agent')->nullable();
             $table->text('details')->nullable();
