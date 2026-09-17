@@ -5,6 +5,9 @@ namespace Tests\Feature;
 // use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+/**
+ * Basic test to verify the application loads correctly.
+ */
 class ExampleTest extends TestCase
 {
     /**
