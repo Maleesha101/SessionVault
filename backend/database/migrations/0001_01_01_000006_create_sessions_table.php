@@ -14,7 +14,8 @@ return new class extends Migration
                 $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
                 $table->string('ip_address')->nullable();
                 $table->text('user_agent')->nullable();
-                $table->timestamp('last_activity');
+                $table->text('payload')->nullable();
+                $table->integer('last_activity');
                 $table->boolean('is_current')->default(true);
                 $table->timestamps();
 

@@ -87,7 +87,7 @@ class AuthController extends Controller
             $session = Session::where('id', $sessionId)->first();
             $session->update([
                 'user_id' => $user->id,
-                'last_activity' => now(),
+                'last_activity' => now()->timestamp,
                 'is_current' => true,
             ]);
             Session::where('user_id', $user->id)

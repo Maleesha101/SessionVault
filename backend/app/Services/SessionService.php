@@ -42,7 +42,7 @@ class SessionService
             'user_id' => $user->id,
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
-            'last_activity' => now(),
+            'last_activity' => now()->timestamp,
             'is_current' => true,
         ]);
 
@@ -67,7 +67,7 @@ class SessionService
         if (env('VULN_NO_SESSION_ROTATION', true)) {
             $session = Session::where('id', $oldSessionId)->first();
             if ($session) {
-                $session->update(['last_activity' => now()]);
+                $session->update(['last_activity' => now()->timestamp]);
             }
             return $session ?? self::createSession($user, $request);
         }
