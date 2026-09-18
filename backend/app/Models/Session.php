@@ -11,6 +11,12 @@ class Session extends Model
 
     protected $table = 'sessions';
 
+    protected $primaryKey = 'id';
+
+    protected $keyType = 'string';
+
+    public $incrementing = false;
+
     protected $fillable = [
         'id',
         'user_id',

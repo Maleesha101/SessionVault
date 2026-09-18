@@ -15,6 +15,7 @@ Route::get('/', function () {
 
 // Web Auth routes
 Route::get('/login', function () { return view('auth.login'); })->name('login');
+Route::post('/login', [AuthController::class, 'webLogin']);
 Route::get('/register', function () { return view('auth.register'); })->name('register');
 
 // Protected web routes - require authentication

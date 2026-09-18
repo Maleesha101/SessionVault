@@ -9,11 +9,36 @@ use App\Services\SecurityEventService;
 use App\Services\SessionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    /**
+     * Handle the browser login form while preserving the API session flow.
+     */
+    public function webLogin(Request $request): RedirectResponse
+    {
+        $response = $this->login($request);
+
+        if ($response->getStatusCode() !== 200) {
+            return back()->withInput($request->only('email'))->with('error', $response->getData(true)['message'] ?? 'Unable to sign in.');
+        }
+
+        $user = User::where('email', $request->string('email'))->firstOrFail();
+        Auth::login($user);
+
+        $redirect = new RedirectResponse('/dashboard');
+        $setCookie = $response->headers->get('Set-Cookie');
+
+        if ($setCookie) {
+            $redirect->headers->set('Set-Cookie', $setCookie);
+        }
+
+        return $redirect;
+    }
+
     /**
      * Register a new user.
      */
