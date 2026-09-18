@@ -7,7 +7,7 @@ use App\Models\Product;
 use App\Models\LoginAttempt;
 use App\Models\PasswordResetToken;
 use Illuminate\Database\Eloquent\Factories\Sequence;
-use Illuminate\DatabaseSeeder;
+use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {

@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\PasswordResetToken;
-use Illuminate\DatabaseSeeder;
+use Illuminate\Database\Seeder;
 
 class PasswordResetTokenSeeder extends Seeder
 {

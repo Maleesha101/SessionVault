@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\LoginAttempt;
-use Illuminate\DatabaseSeeder;
+use Illuminate\Database\Seeder;
 
 class LoginAttemptSeeder extends Seeder
 {

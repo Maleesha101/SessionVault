@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Models\Product;
 use App\Models\Order;
 use App\Models\OrderItem;
-use Illuminate\DatabaseSeeder;
+use Illuminate\Database\Seeder;
 
 class OrderSeeder extends Seeder
 {
@@ -21,11 +21,11 @@ class OrderSeeder extends Seeder
         $orders = [
             [
                 'user' => $alice,
-                'total' => 199.98,
+                'total' => 99.98,
                 'status' => 'delivered',
                 'order_date' => now()->subDays(15),
                 'items' => [
-                    ['product' => $products[1], 'quantity' => 2, 'unit_price' => 49.99],
+                    ['product' => $products[2], 'quantity' => 2, 'unit_price' => 49.99],
                 ],
             ],
             [
@@ -34,17 +34,17 @@ class OrderSeeder extends Seeder
                 'status' => 'delivered',
                 'order_date' => now()->subDays(8),
                 'items' => [
-                    ['product' => $products[0], 'quantity' => 1, 'unit_price' => 129.99],
+                    ['product' => $products[1], 'quantity' => 1, 'unit_price' => 129.99],
                 ],
             ],
             [
                 'user' => $alice,
-                'total' => 149.98,
+                'total' => 212.98,
                 'status' => 'shipped',
                 'order_date' => now()->subDays(3),
                 'items' => [
-                    ['product' => $products[4], 'quantity' => 1, 'unit_price' => 199.99],
-                    ['product' => $products[6], 'quantity' => 1, 'unit_price' => 12.99],
+                    ['product' => $products[5], 'quantity' => 1, 'unit_price' => 199.99],
+                    ['product' => $products[7], 'quantity' => 1, 'unit_price' => 12.99],
                 ],
             ],
             [
@@ -53,17 +53,17 @@ class OrderSeeder extends Seeder
                 'status' => 'pending',
                 'order_date' => now()->subDay(),
                 'items' => [
-                    ['product' => $products[4], 'quantity' => 1, 'unit_price' => 199.99],
+                    ['product' => $products[5], 'quantity' => 1, 'unit_price' => 199.99],
                 ],
             ],
             [
                 'user' => $charlie,
-                'total' => 179.98,
+                'total' => 155.97,
                 'status' => 'delivered',
                 'order_date' => now()->subDays(22),
                 'items' => [
-                    ['product' => $products[0], 'quantity' => 1, 'unit_price' => 129.99],
-                    ['product' => $products[6], 'quantity' => 2, 'unit_price' => 12.99],
+                    ['product' => $products[1], 'quantity' => 1, 'unit_price' => 129.99],
+                    ['product' => $products[7], 'quantity' => 2, 'unit_price' => 12.99],
                 ],
             ],
         ];
