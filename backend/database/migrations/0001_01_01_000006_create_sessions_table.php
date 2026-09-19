@@ -15,7 +15,7 @@ return new class extends Migration
                 $table->string('ip_address')->nullable();
                 $table->text('user_agent')->nullable();
                 $table->text('payload')->nullable();
-                $table->integer('last_activity');
+                $table->timestamp('last_activity');
                 $table->boolean('is_current')->default(true);
                 $table->timestamps();
 
