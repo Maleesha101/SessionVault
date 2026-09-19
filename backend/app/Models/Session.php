@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Session extends Model
 {
@@ -27,9 +30,20 @@ class Session extends Model
     ];
 
     protected $casts = [
-        'last_activity' => 'datetime',
         'is_current' => 'boolean',
     ];
+
+    protected function lastActivity(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => $value === null ? null : Carbon::createFromTimestamp((int) $value),
+            set: fn ($value) => [
+                'last_activity' => $value instanceof DateTimeInterface
+                    ? $value->getTimestamp()
+                    : (int) $value,
+            ],
+        );
+    }
 
     public function user()
     {
