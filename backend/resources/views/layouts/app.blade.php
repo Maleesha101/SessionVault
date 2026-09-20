@@ -47,6 +47,8 @@
     <header class="header">
         <a href="/" class="brand"><span class="brand-mark">SV</span> SessionVault</a>
         <nav class="nav">
+            <a href="{{ route('products.index') }}">Products</a>
+            <a href="{{ route('bag.show') }}">Bag</a>
             @if(auth()->check())
                 <a href="/dashboard">Overview</a><a href="/orders">Orders</a><a href="/sessions">Sessions</a><a href="/profile">Profile</a>
                 @if(auth()->user()->isAdmin())<a href="/admin/dashboard">Admin</a>@endif

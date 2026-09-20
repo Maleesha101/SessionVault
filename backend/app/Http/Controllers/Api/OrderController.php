@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Services\CartService;
 use App\Services\SecurityEventService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -84,18 +86,30 @@ class OrderController extends Controller
     }
 
     /**
-     * Create a new order.
+     * Create a new order from request items or the session bag.
      */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request): JsonResponse|RedirectResponse
     {
         $user = Auth::user();
 
         if (! $user) {
+            if ($this->wantsHtml($request)) {
+                return redirect('/login')->with('error', 'Sign in to place an order.');
+            }
+
             return response()->json([
                 'message' => 'Unauthenticated',
                 'error' => 'UNAUTHENTICATED',
             ], 401);
         }
+
+        $items = $request->input('items');
+
+        if ((! is_array($items) || $items === []) && $this->wantsHtml($request)) {
+            $items = CartService::checkoutPayload();
+        }
+
+        $request->merge(['items' => $items]);
 
         $validated = $request->validate([
             'items' => 'required|array|min:1',
@@ -113,6 +127,10 @@ class OrderController extends Controller
             $product = $productsById[$itemData['product_id']] ?? null;
 
             if (! $product) {
+                if ($this->wantsHtml($request)) {
+                    return redirect('/bag')->with('error', 'A product in your bag could not be found.');
+                }
+
                 return response()->json([
                     'message' => 'Product not found',
                     'error' => 'PRODUCT_NOT_FOUND',
@@ -120,8 +138,12 @@ class OrderController extends Controller
             }
 
             if ($product->stock_quantity < $itemData['quantity']) {
+                if ($this->wantsHtml($request)) {
+                    return redirect('/bag')->with('error', 'Insufficient stock for '.$product->name.'.');
+                }
+
                 return response()->json([
-                    'message' => 'Insufficient stock for product: ' . $product->name,
+                    'message' => 'Insufficient stock for product: '.$product->name,
                     'error' => 'INSUFFICIENT_STOCK',
                 ], 400);
             }
@@ -135,7 +157,6 @@ class OrderController extends Controller
                 'total_price' => $product->price * $itemData['quantity'],
             ];
 
-            // Update stock
             $product->decrement('stock_quantity', $itemData['quantity']);
         }
 
@@ -161,6 +182,14 @@ class OrderController extends Controller
             'item_count' => count($orderItems),
             'total' => $total,
         ]);
+
+        if ($this->wantsHtml($request)) {
+            CartService::clear();
+
+            return redirect()
+                ->route('orders.show', $order->id)
+                ->with('message', 'Order #'.$order->id.' placed successfully.');
+        }
 
         return response()->json([
             'message' => 'Order created successfully',

@@ -27,7 +27,11 @@
         <h1>Orders & deliveries</h1>
         <p>Track your purchases, check status, and open receipts for each order.</p>
     </div>
-    <span class="badge badge-user">{{ $orders->count() }} {{ $orders->count() === 1 ? 'order' : 'orders' }}</span>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <span class="badge badge-user">{{ $orders->count() }} {{ $orders->count() === 1 ? 'order' : 'orders' }}</span>
+        <a href="{{ route('products.index') }}" class="btn btn-secondary">Browse collection</a>
+        <a href="{{ route('bag.show') }}" class="btn btn-primary">View bag</a>
+    </div>
 </div>
 
 <div class="metric-row">
@@ -56,7 +60,7 @@
     </div>
 
     @if($orders->isEmpty())
-        <p class="empty">No orders yet. When you place one, it will show up here.</p>
+        <p class="empty">No orders yet. <a class="row-link" href="{{ route('products.index') }}">Browse the collection</a> or <a class="row-link" href="{{ route('bag.show') }}">open your bag</a> to place one.</p>
     @else
         <table>
             <thead>

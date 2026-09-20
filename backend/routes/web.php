@@ -5,13 +5,23 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\SessionController;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\ShopController;
+use App\Models\Product;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
 Route::get('/', function () {
-    return view('welcome');
+    $featured = Product::query()->orderBy('id')->take(3)->get();
+
+    return view('welcome', ['featured' => $featured]);
 });
+
+Route::get('/products', [ShopController::class, 'products'])->name('products.index');
+Route::get('/products/{productId}', [ShopController::class, 'show'])->name('products.show');
+Route::get('/bag', [ShopController::class, 'bag'])->name('bag.show');
+Route::post('/bag/{productId}', [ShopController::class, 'addToBag'])->name('bag.add');
+Route::patch('/bag/{productId}', [ShopController::class, 'updateBag'])->name('bag.update');
+Route::delete('/bag/{productId}', [ShopController::class, 'removeFromBag'])->name('bag.remove');
 
 // Web Auth routes
 Route::get('/login', function () { return view('auth.login'); })->name('login');
@@ -30,6 +40,7 @@ Route::middleware('auth')->group(function () {
 
     // Orders (web view)
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
     Route::get('/orders/{orderId}', [OrderController::class, 'show'])->name('orders.show');
 
     // Sessions (web view)
