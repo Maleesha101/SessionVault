@@ -34,8 +34,8 @@ Route::middleware('auth')->group(function () {
 
     // Sessions (web view)
     Route::get('/sessions', [SessionController::class, 'show'])->name('sessions.show');
-    Route::delete('/sessions/{sessionId}', [SessionController::class, 'revoke']);
-    Route::delete('/sessions/all', [SessionController::class, 'revokeAll']);
+    Route::delete('/sessions/all', [SessionController::class, 'revokeAll'])->name('sessions.revoke-all');
+    Route::delete('/sessions/{sessionId}', [SessionController::class, 'revoke'])->name('sessions.revoke');
 
     // Admin routes - admin only
     Route::middleware([\App\Http\Middleware\AdminMiddleware::class])->group(function () {

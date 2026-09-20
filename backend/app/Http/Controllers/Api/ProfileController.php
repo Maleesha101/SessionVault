@@ -3,17 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
     /**
      * Get the current user's profile.
      */
-    public function show(Request $request): JsonResponse
+    public function show(Request $request): JsonResponse|View
     {
         $user = Auth::user();
 
@@ -22,6 +23,10 @@ class ProfileController extends Controller
                 'message' => 'Unauthenticated',
                 'error' => 'UNAUTHENTICATED',
             ], 401);
+        }
+
+        if ($this->wantsHtml($request)) {
+            return view('profile', ['user' => $user]);
         }
 
         return response()->json([
@@ -38,7 +43,7 @@ class ProfileController extends Controller
     /**
      * Update the current user's profile.
      */
-    public function update(Request $request): JsonResponse
+    public function update(Request $request): JsonResponse|RedirectResponse
     {
         $user = Auth::user();
 
@@ -56,9 +61,18 @@ class ProfileController extends Controller
 
         $user->update($validated);
 
+        if ($this->wantsHtml($request)) {
+            return redirect('/profile')->with('message', 'Profile updated successfully.');
+        }
+
         return response()->json([
             'message' => 'Profile updated successfully',
             'user' => $user,
         ]);
+    }
+
+    private function wantsHtml(Request $request): bool
+    {
+        return ! $request->expectsJson() && ! $request->is('api/*');
     }
 }
