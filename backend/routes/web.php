@@ -30,7 +30,7 @@ Route::middleware('auth')->group(function () {
 
     // Orders (web view)
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::get('/orders/{orderId}', [OrderController::class, 'show'])->name('orders.show');
 
     // Sessions (web view)
     Route::get('/sessions', [SessionController::class, 'show'])->name('sessions.show');

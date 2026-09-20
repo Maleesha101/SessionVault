@@ -9,13 +9,16 @@ use App\Models\Product;
 use App\Services\SecurityEventService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class OrderController extends Controller
 {
     /**
      * Get the current user's orders.
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): JsonResponse|View
     {
         $user = Auth::user();
 
@@ -31,32 +34,21 @@ class OrderController extends Controller
             ->latest('order_date')
             ->get();
 
+        if ($this->wantsHtml($request)) {
+            return view('orders', ['orders' => $orders]);
+        }
+
         return response()->json([
-            'orders' => $orders->transform(function ($order) {
-                return [
-                    'id' => $order->id,
-                    'total_amount' => $order->total_amount,
-                    'status' => $order->status,
-                    'order_date' => $order->order_date,
-                    'shipped_date' => $order->shipped_date,
-                    'items' => $order->items->transform(function ($item) {
-                        return [
-                            'product_id' => $item->product_id,
-                            'product_name' => $item->product->name,
-                            'quantity' => $item->quantity,
-                            'unit_price' => $item->unit_price,
-                            'total_price' => $item->total_price,
-                        ];
-                    }),
-                ];
-            }),
+            'orders' => $orders->map(function ($order) {
+                return $this->orderPayload($order);
+            })->values(),
         ]);
     }
 
     /**
      * Get an individual order's details.
      */
-    public function show(Request $request, int $orderId): JsonResponse
+    public function show(Request $request, int $orderId): JsonResponse|View
     {
         $user = Auth::user();
 
@@ -72,29 +64,22 @@ class OrderController extends Controller
             ->find($orderId);
 
         if (! $order) {
+            if ($this->wantsHtml($request)) {
+                throw new NotFoundHttpException('Order not found.');
+            }
+
             return response()->json([
                 'message' => 'Order not found',
                 'error' => 'ORDER_NOT_FOUND',
             ], 404);
         }
 
+        if ($this->wantsHtml($request)) {
+            return view('order-detail', ['order' => $order]);
+        }
+
         return response()->json([
-            'order' => [
-                'id' => $order->id,
-                'total_amount' => $order->total_amount,
-                'status' => $order->status,
-                'order_date' => $order->order_date,
-                'shipped_date' => $order->shipped_date,
-                'items' => $order->items->transform(function ($item) {
-                    return [
-                        'product_id' => $item->product_id,
-                        'product_name' => $item->product->name,
-                        'quantity' => $item->quantity,
-                        'unit_price' => $item->unit_price,
-                        'total_price' => $item->total_price,
-                    ];
-                }),
-            ],
+            'order' => $this->orderPayload($order),
         ]);
     }
 
@@ -118,7 +103,7 @@ class OrderController extends Controller
             'items.*.quantity' => 'required|integer|min:1|max:99',
         ]);
 
-        $products = Product::whereIn('id', array_keys($validated['items']))->get();
+        $products = Product::whereIn('id', collect($validated['items'])->pluck('product_id'))->get();
         $productsById = $products->keyBy('id');
 
         $total = 0;
@@ -186,5 +171,30 @@ class OrderController extends Controller
                 'items' => $orderItems,
             ],
         ], 201);
+    }
+
+    private function wantsHtml(Request $request): bool
+    {
+        return ! $request->expectsJson() && ! $request->is('api/*');
+    }
+
+    private function orderPayload(Order $order): array
+    {
+        return [
+            'id' => $order->id,
+            'total_amount' => $order->total_amount,
+            'status' => $order->status,
+            'order_date' => $order->order_date,
+            'shipped_date' => $order->shipped_date,
+            'items' => $order->items->map(function ($item) {
+                return [
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product->name ?? 'Unknown',
+                    'quantity' => $item->quantity,
+                    'unit_price' => $item->unit_price,
+                    'total_price' => $item->total_price,
+                ];
+            })->values(),
+        ];
     }
 }
