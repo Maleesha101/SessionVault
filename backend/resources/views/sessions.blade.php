@@ -6,19 +6,20 @@
 <style>
     .page-head { align-items:end; display:flex; justify-content:space-between; gap:20px; margin-bottom:28px; }
     .page-head h1 { font-size:38px; letter-spacing:-.06em; margin-top:8px; }
-    .page-head p { color:var(--muted); font-size:13px; margin-top:8px; max-width:46ch; }
-    .metric-row { display:grid; gap:14px; grid-template-columns:repeat(3,1fr); margin-bottom:20px; }
-    .metric { background:#fff; border:1px solid var(--line); border-radius:12px; padding:18px 20px; }
+    .page-head p { color:var(--muted); font-size:13px; margin-top:8px; max-width:48ch; }
+    .metric-row { display:grid; gap:16px; grid-template-columns:repeat(3,1fr); margin-bottom:22px; }
+    .metric { background:#fff; border:1px solid var(--line); border-radius:12px; padding:20px; }
     .metric span { color:var(--muted); display:block; font:500 11px 'DM Mono',monospace; text-transform:uppercase; }
-    .metric strong { display:block; font-size:22px; letter-spacing:-.04em; margin-top:10px; }
-    .metric code { font-size:13px; }
-    .ua { color:var(--muted); display:block; font-size:11px; margin-top:4px; max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .card-head { align-items:center; display:flex; justify-content:space-between; gap:16px; margin-bottom:4px; }
+    .metric strong { display:block; font-size:24px; letter-spacing:-.05em; margin-top:10px; word-break:break-all; }
+    .metric small { color:var(--green); display:block; font-size:11px; margin-top:6px; }
+    .card-head { align-items:flex-start; display:flex; justify-content:space-between; gap:16px; margin-bottom:4px; }
+    .card-head p { color:var(--muted); font-size:13px; margin-top:6px; }
+    .ua { color:var(--muted); display:block; font-size:11px; margin-top:4px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .empty { color:var(--muted); padding:28px 0 8px; text-align:center; }
     @media (max-width:700px) {
         .page-head { align-items:flex-start; flex-direction:column; }
         .metric-row { grid-template-columns:1fr; }
-        .card-head { align-items:flex-start; flex-direction:column; }
+        .card-head { flex-direction:column; }
     }
 </style>
 
@@ -26,43 +27,47 @@
     <div>
         <div class="eyebrow">Device security</div>
         <h1>Active sessions</h1>
-        <p>Review every place your account is signed in. Revoke anything you do not recognize.</p>
+        <p>Review every place your account is signed in and revoke anything you do not recognize.</p>
     </div>
-    <span class="badge badge-user">{{ $sessions->count() }} {{ Str::plural('session', $sessions->count()) }}</span>
+    <span class="badge badge-user">{{ $sessions->count() }} {{ $sessions->count() === 1 ? 'session' : 'sessions' }}</span>
 </div>
 
 <div class="metric-row">
     <div class="metric">
         <span>Current fingerprint</span>
-        <strong><code>{{ $currentSession->fingerprint ?? 'N/A' }}</code></strong>
+        <strong style="font-size:16px;margin-top:14px;"><code>{{ $currentSession->fingerprint ?? 'N/A' }}</code></strong>
+        <small>This browser</small>
     </div>
     <div class="metric">
-        <span>This device</span>
-        <strong>{{ $currentSession->ip_address ?? 'Unknown' }}</strong>
+        <span>Signed-in devices</span>
+        <strong>{{ $sessions->count() }}</strong>
+        <small>{{ $sessions->where('is_current', false)->count() }} other {{ $sessions->where('is_current', false)->count() === 1 ? 'device' : 'devices' }}</small>
     </div>
     <div class="metric">
-        <span>Other sessions</span>
-        <strong>{{ max(0, $sessions->count() - ($currentSession ? 1 : 0)) }}</strong>
+        <span>Last activity</span>
+        <strong style="font-size:16px;margin-top:14px;">{{ $currentSession && $currentSession->last_activity ? $currentSession->last_activity->format('M d, Y H:i') : '—' }}</strong>
+        <small>Current session</small>
     </div>
 </div>
 
 <div class="card">
     <div class="card-head">
         <div>
-            <div class="eyebrow">Signed-in devices</div>
-            <h2 style="margin-top:7px;">Where you are logged in</h2>
+            <div class="eyebrow">Session list</div>
+            <h2 style="margin-top:7px;">Where you are signed in</h2>
+            <p>Revoking a session signs that device out immediately.</p>
         </div>
         @if($sessions->count() > 1)
             <form method="POST" action="{{ route('sessions.revoke-all') }}">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="btn btn-secondary">Revoke all other sessions</button>
+                <button type="submit" class="btn btn-secondary">Revoke all others</button>
             </form>
         @endif
     </div>
 
     @if($sessions->isEmpty())
-        <p class="empty">No active sessions found for this account.</p>
+        <p class="empty">No active sessions found.</p>
     @else
         <table>
             <thead>
@@ -79,8 +84,8 @@
                 @foreach($sessions as $session)
                 <tr>
                     <td><code>{{ $session->fingerprint }}</code></td>
-                    <td>{{ optional($session->created_at)->format('M d, Y H:i') ?? '—' }}</td>
-                    <td>{{ optional($session->last_activity)->format('M d, Y H:i') ?? '—' }}</td>
+                    <td>{{ $session->created_at?->format('M d, Y H:i') ?? '—' }}</td>
+                    <td>{{ $session->last_activity?->format('M d, Y H:i') ?? '—' }}</td>
                     <td>
                         {{ $session->ip_address ?: '—' }}
                         @if($session->user_agent)
@@ -96,7 +101,7 @@
                     </td>
                     <td>
                         @if(! $session->is_current)
-                            <form method="POST" action="{{ route('sessions.revoke', $session->id) }}" style="display:inline">
+                            <form method="POST" action="{{ route('sessions.revoke', $session->id) }}" style="display:inline" onsubmit="return confirm('Revoke this session?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger">Revoke</button>

@@ -177,7 +177,7 @@ class AuthController extends Controller
     /**
      * Recent security events for the admin console.
      */
-    public function securityEvents(Request $request): JsonResponse|View
+    public function securityEvents(Request $request): JsonResponse|RedirectResponse
     {
         $user = Auth::user();
 
@@ -189,7 +189,7 @@ class AuthController extends Controller
         }
 
         $events = SecurityEvent::query()
-            ->latest('created_at')
+            ->latest('event_timestamp')
             ->take(50)
             ->get();
 
